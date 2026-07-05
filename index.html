@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Death Prediction Machine</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 10px;
+
+      background:
+        linear-gradient(135deg, rgba(0,0,0,0.6), rgba(30,30,30,0.8)),
+        url('https://copilot.microsoft.com/th/id/BCO.1ded3bd6-b276-4b02-b61a-8e0c7d54f3f9.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+
+      animation: flicker 3s infinite;
+    }
+
+    /* Fog overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('https://www.transparenttextures.com/patterns/fog.png');
+      opacity: 0.15;
+      animation: drift 30s linear infinite;
+      pointer-events: none;
+    }
+
+    .container {
+      background: rgba(0,0,0,0.7);
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      display: none;
+      animation: fadeIn 1.5s ease;
+    }
+    .active { display: block; }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      background: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
+    h1 {
+      color: #ff0000;
+      text-shadow: 0 0 15px #ff0000;
+      animation: glow 2s infinite alternate;
+      font-size: 1.8em;
+    }
+    h2 {
+      font-size: 1.4em;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1em;
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .disclaimer {
+      margin-top: 15px;
+      font-size: 0.9em;
+      color: #ffcc00;
+    }
+
+    /* Scary message overlay */
+    #scaryMessage {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2em;
+      color: red;
+      text-shadow: 0 0 20px red, 0 0 40px black;
+      opacity: 0;
+      pointer-events: none;
+      animation: flashMessage 1s ease;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #ff0000; }
+      to { text-shadow: 0 0 20px #ff0000, 0 0 30px #ff0000; }
+    }
+    @keyframes flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+      20%, 24%, 55% { opacity: 0.8; }
+      22% { opacity: 0.6; }
+    }
+    @keyframes drift {
+      from { transform: translateX(0); }
+      to { transform: translateX(-200px); }
+    }
+    @keyframes flashMessage {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5em; }
+      h2 { font-size: 1.2em; }
+      button { font-size: 16px; }
+      #scaryMessage { font-size: 1.5em; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Starting Page -->
+  <div class="container active" id="startPage">
+    <h1>☠️ Death Prediction Machine</h1>
+    <p>This is a fun horror‑style demo.</p>
+    <button onclick="openForm()">Open</button>
+    <!-- Creepy background sound loop -->
+    <audio id="horrorSound" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop></audio>
+  </div>
+
+  <!-- Input Form Page -->
+  <div class="container" id="formPage">
+    <h2>Enter Your Details</h2>
+    <input type="text" id="name" placeholder="Enter your name">
+    <input type="date" id="birthDate">
+    <input type="number" id="age" placeholder="Enter your age">
+    <textarea id="diseases" placeholder="Enter diseases (comma separated)"></textarea>
+    <button onclick="predict()">Predict</button>
+  </div>
+
+  <!-- Result Page -->
+  <div class="container" id="resultPage">
+    <h2>Prediction Result</h2>
+    <div class="result" id="predictionText"></div>
+    <div class="disclaimer">
+      ⚠️ Disclaimer: This is a fun prediction, not real medical advice.
+    </div>
+    <button onclick="goBack()">Go Back</button>
+  </div>
+
+  <!-- Scary Message Overlay -->
+  <div id="scaryMessage"></div>
+
+  <script>
+    function showPage(pageId) {
+      document.getElementById('startPage').classList.remove('active');
+      document.getElementById('formPage').classList.remove('active');
+      document.getElementById('resultPage').classList.remove('active');
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    function openForm() {
+      document.getElementById('horrorSound').play();
+      showPage('formPage');
+    }
+
+    function predict() {
+      let name = document.getElementById('name').value.trim();
+      let birthDate = document.getElementById('birthDate').value;
+      let age = document.getElementById('age').value;
+      let diseases = document.getElementById('diseases').value;
+
+      if (!name || !birthDate || !age) {
+        alert("Please fill in your name, birth date, and age!");
+        return;
+      }
+
+      let year = new Date(birthDate).getFullYear();
+      let randomYears = Math.floor(Math.random() * 40) + 40;
+      let predictedYear = year + randomYears;
+
+      let prediction = "Hello " + name + ", based on your age (" + age + 
+                       "), birth year (" + year + "), and diseases (" + diseases + 
+                       "), your predicted death year is around " + predictedYear + ".";
+
+      document.getElementById('predictionText').innerText = prediction;
+      showPage('resultPage');
+    }
+
+    function goBack() {
+      showPage('startPage');
+    }
+
+    // Random scary message generator
+    const scaryMessages = [
+      "👻 I see you...",
+      "💀 Your time is near...",
+      "🩸 Run while you can...",
+      "☠️ The shadows whisper your name...",
+      "😱 They are watching..."
+    ];
+
+    function showScaryMessage() {
+      let msg = scaryMessages[Math.floor(Math.random() * scaryMessages.length)];
+      let overlay = document.getElementById('scaryMessage');
+      overlay.innerText = msg;
+      overlay.style.animation = "flashMessage 1s ease";
+      setTimeout(() => { overlay.style.animation = ""; }, 1000);
+    }
+
+    // Show random scary message every 10–20 seconds
+    setInterval(() => {
+      showScaryMessage();
+    }, Math.floor(Math.random() * 10000) + 10000);
+  </script>
+</body>
+</html>
